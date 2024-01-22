@@ -17,11 +17,15 @@ use App\Http\Controllers\CsvController;
 Route::get('/', function () {
     return view('welcome');
 });
-// Route::post('upload',[CsvController::class,'save'])->name('upload');
-// Route::get('export', [CsvController::class, 'export'])->name('export');
+ Route::post('upload',[CsvController::class,'save'])->name('upload');
 /// i have created import and export function in 2 different ways first one is simple method and second one is using mattexcel package
+// Route::get('export', [CsvController::class, 'export'])->name('export');
 
 
 Route::get('importExportView', [CsvController::class, 'importExportView']);
 Route::get('export', [CsvController::class, 'export'])->name('export');
 Route::post('import', [CsvController::class, 'import'])->name('import');
+Route::get('files', [CsvController::class, 'index'])->name('files');
+// routes/web.php
+
+Route::get('details/{id}',[CsvController::class,'details'])->name('details');

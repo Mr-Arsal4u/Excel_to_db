@@ -2,61 +2,65 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\File;
 use App\Models\Record;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Response;
 use App\Exports\RecordExport;
 use App\Imports\RecordImport;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Response;
 
 class CsvController extends Controller
 {
-//     public function save(Request $request)
-//     {
-//         $file = $request->file('file');
-//         $fileContents = file($file->getPathname());
+    //     public function save(Request $request)
+    //     {
+    //         $file = $request->file('file');
+    //         $fileContents = file($file->getPathname());
 
-//         foreach ($fileContents as $line) {
-//             $data = str_getcsv($line);
-
-
-//             Record::create([
-//                 'Name' => $data[0],
-//                 'Email' => $data[1],
-//                 'Address' => $data[2],
-//             ]);
-//          }
+    //         foreach ($fileContents as $line) {
+    //             $data = str_getcsv($line);
 
 
-//     return redirect()->back()->with('success', 'CSV file imported successfully.');
+    //             Record::create([
+    //                 'Name' => $data[0],
+    //                 'Email' => $data[1],
+    //                 'Address' => $data[2],
+    //             ]);
+    //          }
 
-// }
 
-//     public function export()
-//     {
-//         $records = Record::all();
-//         $csvFileName = 'Record.csv';
-//         $headers = [
-//             'Content-Type' => 'text/csv',
-//             'Content-Disposition' => 'attachment; filename="' . $csvFileName . '"',
-//         ];
+    //     return redirect()->back()->with('success', 'CSV file imported successfully.');
 
-//         $handle = fopen('php://output', 'w');
-//         fputcsv($handle, ['Name', 'Email', 'Address']);
+    // }
 
-//         foreach ($records as $record) {
-//             fputcsv($handle, [$record->Name, $record->Email, $record->Address]);
-//         }
+    //     public function export()
+    //     {
+    //         $records = Record::all();
+    //         $csvFileName = 'Record.csv';
+    //         $headers = [
+    //             'Content-Type' => 'text/csv',
+    //             'Content-Disposition' => 'attachment; filename="' . $csvFileName . '"',
+    //         ];
 
-//         fclose($handle);
+    //         $handle = fopen('php://output', 'w');
+    //         fputcsv($handle, ['Name', 'Email', 'Address']);
 
-//         return Response::make('', 200, $headers);
+    //         foreach ($records as $record) {
+    //             fputcsv($handle, [$record->Name, $record->Email, $record->Address]);
+    //         }
 
-//     }This code is custom export and import code
+    //         fclose($handle);
+
+    //         return Response::make('', 200, $headers);
+
+    //     }This code is custom export and import code
 
     public function importExportView()
     {
-        return view('import');
+        $records = Record::all();
+
+        return view('import', compact('records'));
     }
 
     /**
@@ -72,8 +76,21 @@ class CsvController extends Controller
      */
     public function import()
     {
-        Excel::import(new RecordImport, request()->file('file'));
+        $file = request()->file('file');
 
+        $filename = $file->getClientOriginalName();
+        // dd($filename);
+        $newFile = File::create(['filename' => $filename]);
+
+        Storage::disk('public')->put($filename, file_get_contents($file));
+
+        Excel::import(new RecordImport($newFile), $file);
         return back();
+    }
+
+    public function details($id)
+    {
+        $records = Record::where('file_id', $id)->get();
+        return view('details', compact('records'));
     }
 }
